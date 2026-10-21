@@ -1,9 +1,0 @@
-# Render Blueprint: New > Blueprint in the Render dashboard, then pick this repository.
-services:
-  - type: web
-    name: smart-battery-optimizer
-    runtime: docker
-    plan: free
-    region: singapore
-    healthCheckPath: /api/health
-    autoDeploy: true
