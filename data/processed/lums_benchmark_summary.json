@@ -1,0 +1,144 @@
+{
+ "homes": 58,
+ "home_weeks": 2539,
+ "policies": {
+  "none": {
+   "label": "No battery",
+   "saving_vs_none_median_pct": 0.0,
+   "gain_vs_selfuse_pct_of_bill_median": -54.29,
+   "gain_pct_ci95": [
+    -58.34,
+    -50.34
+   ],
+   "gain_pkr_per_year_median": -46093,
+   "gain_pkr_ci95": [
+    -53943,
+    -39515
+   ],
+   "homes_beating_rule": 0
+  },
+  "selfuse": {
+   "label": "Self-use rule",
+   "saving_vs_none_median_pct": 54.3,
+   "gain_vs_selfuse_pct_of_bill_median": 0.0,
+   "gain_pct_ci95": [
+    0.0,
+    0.0
+   ],
+   "gain_pkr_per_year_median": 0,
+   "gain_pkr_ci95": [
+    0,
+    0
+   ],
+   "homes_beating_rule": 0
+  },
+  "peakaware": {
+   "label": "Peak-aware rule",
+   "saving_vs_none_median_pct": 30.6,
+   "gain_vs_selfuse_pct_of_bill_median": -21.48,
+   "gain_pct_ci95": [
+    -24.45,
+    -18.83
+   ],
+   "gain_pkr_per_year_median": -20913,
+   "gain_pkr_ci95": [
+    -23277,
+    -13198
+   ],
+   "homes_beating_rule": 0
+  },
+  "mpc_persistence": {
+   "label": "Optimizer, persistence forecast",
+   "saving_vs_none_median_pct": 53.9,
+   "gain_vs_selfuse_pct_of_bill_median": -0.87,
+   "gain_pct_ci95": [
+    -1.37,
+    -0.51
+   ],
+   "gain_pkr_per_year_median": -683,
+   "gain_pkr_ci95": [
+    -1063,
+    -428
+   ],
+   "homes_beating_rule": 14
+  },
+  "mpc_lgbm": {
+   "label": "Optimizer, LightGBM forecast",
+   "saving_vs_none_median_pct": 53.5,
+   "gain_vs_selfuse_pct_of_bill_median": -0.81,
+   "gain_pct_ci95": [
+    -1.05,
+    -0.54
+   ],
+   "gain_pkr_per_year_median": -626,
+   "gain_pkr_ci95": [
+    -1003,
+    -371
+   ],
+   "homes_beating_rule": 13
+  },
+  "mpc_perfect": {
+   "label": "Optimizer, perfect forecast",
+   "saving_vs_none_median_pct": 56.7,
+   "gain_vs_selfuse_pct_of_bill_median": 2.48,
+   "gain_pct_ci95": [
+    2.04,
+    3.02
+   ],
+   "gain_pkr_per_year_median": 2199,
+   "gain_pkr_ci95": [
+    1694,
+    2632
+   ],
+   "homes_beating_rule": 58
+  },
+  "oracle": {
+   "label": "Oracle (ceiling)",
+   "saving_vs_none_median_pct": 57.8,
+   "gain_vs_selfuse_pct_of_bill_median": 3.6,
+   "gain_pct_ci95": [
+    3.23,
+    4.14
+   ],
+   "gain_pkr_per_year_median": 3182,
+   "gain_pkr_ci95": [
+    2441,
+    3912
+   ],
+   "homes_beating_rule": 58
+  }
+ },
+ "by_city": {
+  "Islamabad": {
+   "median_pct_of_bill": -0.66,
+   "homes": 10
+  },
+  "Karachi": {
+   "median_pct_of_bill": 0.2,
+   "homes": 10
+  },
+  "Lahore": {
+   "median_pct_of_bill": -0.58,
+   "homes": 9
+  },
+  "Multan": {
+   "median_pct_of_bill": -0.81,
+   "homes": 10
+  },
+  "Peshawar": {
+   "median_pct_of_bill": -0.84,
+   "homes": 10
+  },
+  "Skardu": {
+   "median_pct_of_bill": -6.55,
+   "homes": 9
+  }
+ },
+ "best_forecast_policy": "mpc_lgbm",
+ "captured_pct_of_headroom": {
+  "mpc_persistence": -19,
+  "mpc_lgbm": -21,
+  "mpc_perfect": 73
+ },
+ "gain_vs_ac_share_spearman": -0.04
+}

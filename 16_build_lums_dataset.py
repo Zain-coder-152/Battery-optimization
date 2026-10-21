@@ -12,31 +12,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pvlib
 
-from lums import CITIES, COORDS, house_files, hourly, is_ac, load_house_raw, load_weather
+from lums import CITIES, house_files, hourly, is_ac, load_house_raw, load_weather, solar_per_kw
 
 OUT = Path("data/processed")
 START, END = "2023-11-01 00:00", "2024-10-30 23:00"        # the window almost every home covers
 IDX = pd.date_range(START, END, freq="h")
-TILT, AZIMUTH, LOSSES = 30, 180, 0.14
 WEATHER_SHIFT_H = -1          # weather is stamped ~1 h late; chosen by best match with measured rooftop output
-
-
-def solar_per_kw(city, weather):
-    """kWh produced in each hour by 1 kW of panels."""
-    lat, lon = COORDS[city]
-    times = weather.index.tz_localize("Asia/Karachi")
-    ghi = weather["Solar Radiation"].clip(lower=0).to_numpy()
-    sp = pvlib.solarposition.get_solarposition(times + pd.Timedelta(minutes=30), lat, lon)   # mid-hour sun position
-    zen, app_zen, az = (sp[c].to_numpy() for c in ("zenith", "apparent_zenith", "azimuth"))
-    dec = pvlib.irradiance.erbs(ghi, zen, times.dayofyear.to_numpy())
-    poa = pvlib.irradiance.get_total_irradiance(TILT, AZIMUTH, app_zen, az, np.asarray(dec["dni"]), ghi,
-                                                np.asarray(dec["dhi"]), model="isotropic")["poa_global"]
-    t_cell = pvlib.temperature.faiman(np.asarray(poa), weather["Temperature"].to_numpy(),
-                                      weather["Wind Speed"].to_numpy() / 3.6)
-    dc = pvlib.pvsystem.pvwatts_dc(np.asarray(poa), np.asarray(t_cell), pdc0=1.0, gamma_pdc=-0.0037)
-    return pd.Series(np.clip(np.nan_to_num(np.asarray(dc)) * (1 - LOSSES), 0, 1.0), index=weather.index)
 
 
 # ---------- cities: weather + solar ----------

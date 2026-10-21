@@ -4,12 +4,15 @@ duplicate timestamps; Peshawar homes stored twice), so every script reads them t
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+import pvlib
 
 ROOT = Path(__file__).parent / "data/raw/lums"
 ENERGY = ROOT / "rewdp_dataset/rewdp_dataset"
 WEATHER = ROOT / "weather_dataset/weather_dataset"
 CITIES = ["Lahore", "Multan", "Peshawar", "Karachi", "Islamabad", "Skardu"]
+TILT, AZIMUTH, LOSSES = 30, 180, 0.14       # fixed panels facing south, 14% system losses
 COORDS = {"Lahore": (31.55, 74.34), "Multan": (30.16, 71.52), "Peshawar": (34.01, 71.58),
           "Karachi": (24.86, 67.01), "Islamabad": (33.68, 73.05), "Skardu": (35.30, 75.63)}
 
@@ -71,3 +74,19 @@ def load_weather(city):
     df["datetime"] = pd.to_datetime(df["datetime"], format="mixed")
     df = df.set_index("datetime").sort_index()
     return df[~df.index.duplicated(keep="first")].apply(pd.to_numeric, errors="coerce")
+
+
+def solar_per_kw(city, weather):
+    """kWh produced in each hour by 1 kW of panels."""
+    lat, lon = COORDS[city]
+    times = weather.index.tz_localize("Asia/Karachi")
+    ghi = weather["Solar Radiation"].clip(lower=0).to_numpy()
+    sp = pvlib.solarposition.get_solarposition(times + pd.Timedelta(minutes=30), lat, lon)   # mid-hour sun position
+    zen, app_zen, az = (sp[c].to_numpy() for c in ("zenith", "apparent_zenith", "azimuth"))
+    dec = pvlib.irradiance.erbs(ghi, zen, times.dayofyear.to_numpy())
+    poa = pvlib.irradiance.get_total_irradiance(TILT, AZIMUTH, app_zen, az, np.asarray(dec["dni"]), ghi,
+                                                np.asarray(dec["dhi"]), model="isotropic")["poa_global"]
+    t_cell = pvlib.temperature.faiman(np.asarray(poa), weather["Temperature"].to_numpy(),
+                                      weather["Wind Speed"].to_numpy() / 3.6)
+    dc = pvlib.pvsystem.pvwatts_dc(np.asarray(poa), np.asarray(t_cell), pdc0=1.0, gamma_pdc=-0.0037)
+    return pd.Series(np.clip(np.nan_to_num(np.asarray(dc)) * (1 - LOSSES), 0, 1.0), index=weather.index)

@@ -71,11 +71,13 @@ def solve_lp(solar_f, demand_f, buy_f, sell_f, soc, cap, pmax, eff, min_soc,
 
 def simulate(solar, demand, hours, policy, start, length=168, cap=10.0, pmax=3.0, eff=0.95,
              min_frac=0.1, soc0_frac=0.5, horizon=48, demand_forecast=None,
-             buy=None, sell=None, outage=None, deg_cost=0.0, terminal_factor=1.0):
+             buy=None, sell=None, outage=None, deg_cost=0.0, terminal_factor=1.0, forecaster=None):
     """Simulate hours [start, start+length).
     policy: 'none' | 'selfuse' | 'peakaware' | 'mpc' | callable(t, soc) -> net charge kWh.
     solar/demand/hours are full-year arrays (MPC looks ahead past the end of the week).
     demand_forecast: optional array used for FUTURE demand in MPC (current hour is always real).
+    forecaster: optional callable(t, end) -> (solar_f, demand_f) giving MPC its forecast for hours
+    [t, end) as issued at hour t; overrides demand_forecast. The current hour is always measured.
     buy/sell: price arrays (default: Pakistan TOU). outage: bool array, grid down when True.
     deg_cost: battery wear cost in PKR per kWh charged or discharged."""
     n = len(solar)
@@ -97,9 +99,13 @@ def simulate(solar, demand, hours, policy, start, length=168, cap=10.0, pmax=3.0
             nc = float(np.clip(surplus, -pmax, pmax)) if surplus >= 0 or peak_mask[t] or outage[t] else 0.0
         elif policy == "mpc":
             e = min(t + horizon, n)
-            d_f = np.array((demand if demand_forecast is None else demand_forecast)[t:e], dtype=float)
-            d_f[0] = demand[t]
-            nc = mpc_first_action(solar[t:e], d_f, buy[t:e], sell[t:e], soc, cap, pmax, eff, min_soc,
+            if forecaster is not None:
+                s_f, d_f = (np.array(a, dtype=float) for a in forecaster(t, e))
+            else:
+                s_f = np.array(solar[t:e], dtype=float)
+                d_f = np.array((demand if demand_forecast is None else demand_forecast)[t:e], dtype=float)
+            s_f[0], d_f[0] = solar[t], demand[t]
+            nc = mpc_first_action(s_f, d_f, buy[t:e], sell[t:e], soc, cap, pmax, eff, min_soc,
                                   outage[t:e], deg_cost, terminal_factor)
         elif callable(policy):
             nc = float(policy(t, soc))
