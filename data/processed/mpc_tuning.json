@@ -1,0 +1,10 @@
+{
+ "best_params": {
+  "horizon": 72,
+  "terminal_factor": 0.4601298225909332
+ },
+ "train_cost_best": 2252.262250252531,
+ "train_cost_default": 2257.8065966797935,
+ "test_cost_default": 2074.709205248882,
+ "test_cost_tuned": 2075.063382416707
+}

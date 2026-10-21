@@ -1,0 +1,58 @@
+[
+  {
+    "id": "faisalabad",
+    "name": "Faisalabad",
+    "lat": 31.42,
+    "lon": 73.08,
+    "file": "solar_faisalabad.csv",
+    "annual_kwh_per_5kw": 7109
+  },
+  {
+    "id": "lahore",
+    "name": "Lahore",
+    "lat": 31.55,
+    "lon": 74.34,
+    "file": "solar_lahore.csv",
+    "annual_kwh_per_5kw": 7009
+  },
+  {
+    "id": "karachi",
+    "name": "Karachi",
+    "lat": 24.86,
+    "lon": 67.01,
+    "file": "solar_karachi.csv",
+    "annual_kwh_per_5kw": 7937
+  },
+  {
+    "id": "islamabad",
+    "name": "Islamabad",
+    "lat": 33.68,
+    "lon": 73.05,
+    "file": "solar_islamabad.csv",
+    "annual_kwh_per_5kw": 7427
+  },
+  {
+    "id": "peshawar",
+    "name": "Peshawar",
+    "lat": 34.01,
+    "lon": 71.58,
+    "file": "solar_peshawar.csv",
+    "annual_kwh_per_5kw": 7192
+  },
+  {
+    "id": "quetta",
+    "name": "Quetta",
+    "lat": 30.18,
+    "lon": 66.98,
+    "file": "solar_quetta.csv",
+    "annual_kwh_per_5kw": 8931
+  },
+  {
+    "id": "multan",
+    "name": "Multan",
+    "lat": 30.16,
+    "lon": 71.52,
+    "file": "solar_multan.csv",
+    "annual_kwh_per_5kw": 7344
+  }
+]

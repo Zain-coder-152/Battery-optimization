@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+frontend/node_modules/
+frontend/dist/
+mlruns/
+mlflow.db
+mlartifacts/
+runs/
+.claude/
+# large raw downloads (>100 MB) - see README for where to get them
+data/raw/household_power_consumption.txt
+data/raw/time_series_60min_singleindex.csv

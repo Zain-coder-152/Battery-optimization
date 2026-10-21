@@ -1,0 +1,16 @@
+venv
+**/__pycache__
+.pytest_cache
+.git
+.github
+.claude
+frontend/node_modules
+frontend/dist
+mlruns
+mlflow.db
+mlartifacts
+runs
+data/raw/household_power_consumption.txt
+data/raw/time_series_60min_singleindex.csv
+models/*.zip
+models/imitation_mpc_v6.pt

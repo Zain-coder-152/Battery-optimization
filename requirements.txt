@@ -1,0 +1,7 @@
+# Runtime: what the API + dashboard container needs
+fastapi==0.154.0
+uvicorn==0.54.0
+pydantic==2.14.1
+numpy==2.5.3
+pandas==3.0.6
+scipy==1.18.1

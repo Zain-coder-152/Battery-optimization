@@ -1,0 +1,12 @@
+# Everything for training, experiments and tests (scripts 00-13)
+-r requirements.txt
+torch==2.14.1
+gymnasium==1.4.0
+stable-baselines3==2.9.0
+tensorboard==2.21.0
+matplotlib==3.11.2
+requests==2.34.2
+mlflow==3.17.1
+optuna==5.0.0
+pytest==9.1.1
+httpx==0.28.1
