@@ -17,7 +17,7 @@ COPY data/locations.json data/
 COPY data/raw/solar_*.csv data/raw/
 COPY data/processed/hourly_dataset.csv data/processed/
 COPY --from=web /web/dist frontend/dist
-RUN useradd --create-home app && chown -R app /app
+RUN useradd --create-home --uid 1000 app && chown -R app /app
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ[\"PORT\"]}/api/health')"

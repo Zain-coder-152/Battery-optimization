@@ -12,3 +12,4 @@ runs/
 # large raw downloads (>100 MB) - see README for where to get them
 data/raw/household_power_consumption.txt
 data/raw/time_series_60min_singleindex.csv
+build/
