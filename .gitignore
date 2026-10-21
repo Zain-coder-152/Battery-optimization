@@ -13,3 +13,5 @@ runs/
 data/raw/household_power_consumption.txt
 data/raw/time_series_60min_singleindex.csv
 build/
+data/raw/lums/
+data/processed/lums_*.parquet
