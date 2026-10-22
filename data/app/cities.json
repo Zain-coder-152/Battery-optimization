@@ -1,0 +1,47 @@
+[
+  {
+    "id": "islamabad",
+    "name": "Islamabad",
+    "lat": 33.68,
+    "lon": 73.05,
+    "homes": 9,
+    "typical_kwh_per_day": 14.3,
+    "annual_kwh_per_5kw": 8030
+  },
+  {
+    "id": "karachi",
+    "name": "Karachi",
+    "lat": 24.86,
+    "lon": 67.01,
+    "homes": 9,
+    "typical_kwh_per_day": 21.1,
+    "annual_kwh_per_5kw": 8616
+  },
+  {
+    "id": "lahore",
+    "name": "Lahore",
+    "lat": 31.55,
+    "lon": 74.34,
+    "homes": 9,
+    "typical_kwh_per_day": 21.5,
+    "annual_kwh_per_5kw": 8019
+  },
+  {
+    "id": "multan",
+    "name": "Multan",
+    "lat": 30.16,
+    "lon": 71.52,
+    "homes": 10,
+    "typical_kwh_per_day": 16.9,
+    "annual_kwh_per_5kw": 8493
+  },
+  {
+    "id": "peshawar",
+    "name": "Peshawar",
+    "lat": 34.01,
+    "lon": 71.58,
+    "homes": 9,
+    "typical_kwh_per_day": 14.3,
+    "annual_kwh_per_5kw": 8133
+  }
+]

@@ -12,10 +12,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8000
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY api.py core.py agent.py ./
-COPY data/locations.json data/
-COPY data/raw/solar_*.csv data/raw/
-COPY data/processed/hourly_dataset.csv data/processed/
+COPY api.py core.py ./
+COPY data/app/ data/app/
 COPY --from=web /web/dist frontend/dist
 RUN useradd --create-home --uid 1000 app && chown -R app /app
 USER app

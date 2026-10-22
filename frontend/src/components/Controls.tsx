@@ -75,8 +75,17 @@ export default function Controls({ config, value, onChange }: {
           onChange={(v) => set('battery_kwh', v)} />
         <SliderField id="power" label="Inverter power" unit="kW" value={value.max_power_kw} min={1} max={10} step={0.5}
           onChange={(v) => set('max_power_kw', v)} />
-        <SliderField id="demand" label="Household demand" unit="×" value={value.demand_scale} min={0.5} max={4} step={0.1}
-          onChange={(v) => set('demand_scale', v)} />
+        <SliderField id="demand" label="Daily consumption" unit="kWh" value={value.daily_kwh} min={2} max={80} step={1}
+          onChange={(v) => set('daily_kwh', v)} />
+        {loc && (
+          <p className="-mt-1.5 text-[12px] text-muted">
+            A typical {loc.name} home uses {loc.typical_kwh_per_day} kWh/day.{' '}
+            {value.daily_kwh !== loc.typical_kwh_per_day && (
+              <button type="button" onClick={() => set('daily_kwh', loc.typical_kwh_per_day)}
+                className="font-medium text-accent hover:underline">Use that</button>
+            )}
+          </p>
+        )}
       </Group>
 
       <Group title="Tariff (PKR/kWh)" aside={isDefaultTariff

@@ -6,7 +6,7 @@ A risk margin is a planning-only cost per kWh moved through the battery: storing
 still pays, marginal trades do not. It is never billed - reported costs are the real grid bill.
 
 The margin is tuned on the TUNING homes (odd house numbers, every 4th week) and reported on the
-held-out homes (even house numbers, every complete week), for both forecasts.
+held-out homes (even house numbers, every 2nd complete week), for both forecasts.
 
     python 20_robust_mpc.py
 Results: data/processed/lums_benchmark_robust.parquet, data/processed/lums_robust_summary.json"""
@@ -23,7 +23,7 @@ from core import simulate, tou_prices
 
 bench = importlib.import_module("17_benchmark_homes")
 OUT = Path("data/processed")
-MARGINS = [0.0, 2.0, 4.0, 6.0, 10.0]
+MARGINS = [0.0, 3.0, 6.0]
 
 
 def run_home(args):
@@ -96,13 +96,13 @@ def main():
 
     print(f"\nEvaluating on {len(test_h)} held-out homes (all complete weeks)...")
     margins = sorted(set(best.values()) | {0.0})
-    df = run(jobs_for(test_h, margins, 1), "test")
+    df = run(jobs_for(test_h, margins, 2), "test")
     df.to_parquet(OUT / "lums_benchmark_robust.parquet", index=False)
     g, base = gains(df)
     weeks = df[df.policy == "none"].groupby("house").size()
-    g = g[weeks.reindex(g.index) >= 8]
+    g = g[weeks.reindex(g.index) >= 4]
     summary = {"tuning_homes": len(tune_h), "test_homes": int(len(g)), "chosen_margin": best, "results": {}}
-    print(f"\nHeld-out homes ({len(g)} with >= 8 complete weeks): gain over the self-use rule")
+    print(f"\nHeld-out homes ({len(g)} with >= 4 test weeks): gain over the self-use rule")
     for f in ("persistence", "lgbm"):
         for m in sorted({0.0, best[f]}):
             x = g[(f, m)].to_numpy()

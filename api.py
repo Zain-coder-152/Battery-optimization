@@ -11,37 +11,32 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
-import agent
-from core import simulate, tou_prices, outage_mask, PEAK_HOURS
+from core import simulate, tou_prices, outage_mask, persistence_forecaster, PEAK_HOURS
 
 ROOT = Path(__file__).parent
-df = pd.read_csv(ROOT / "data/processed/hourly_dataset.csv", index_col="timestamp", parse_dates=True)
-DEMAND = df["demand_kwh"].to_numpy(float)
-HOURS = df.index.hour.to_numpy()
-TIMES = df.index
-PROFILE = pd.Series(DEMAND).groupby(HOURS).mean().to_numpy()   # typical-day demand (24 values)
-TYPICAL = PROFILE[HOURS]
+# Typical-home demand shape and solar output per kW for each city, Nov 2023 - Oct 2024
+# (built by 21_build_app_profiles.py from the LUMS smart-meter and weather data).
+PROFILES = pd.read_csv(ROOT / "data/app/city_profiles.csv", parse_dates=["timestamp"])
+LOCATIONS = {c["id"]: c for c in json.loads((ROOT / "data/app/cities.json").read_text())}
+TIMES = pd.DatetimeIndex(PROFILES[PROFILES.city == PROFILES.city.iloc[0]].timestamp)
+HOURS = TIMES.hour.to_numpy()
 W = 168
-LOCATIONS = {loc["id"]: loc for loc in json.loads((ROOT / "data/locations.json").read_text())}
+N_WEEKS = len(TIMES) // W
 DEFAULT_TARIFF = {"peak": 46.85, "offpeak": 34.53, "export": 11.0, "peak_hours": list(PEAK_HOURS)}
-STRATEGIES = {
-    "none": "No battery",
-    "selfuse": "Self-use rule",
-    "peakaware": "Peak-aware rule",
-    "learned": "Learned controller",
-    "mpc": "Optimizer (MPC)",
-}
+# Planning-only risk margin for the optimizer (PKR per kWh moved), tuned on held-out homes by 20_robust_mpc.py.
+RISK_MARGIN = 6.0
+STRATEGIES = {"none": "No battery", "selfuse": "Self-use rule", "peakaware": "Peak-aware rule", "mpc": "Optimizer (MPC)"}
 
-app = FastAPI(title="Smart Battery Optimizer", version="1.0",
+app = FastAPI(title="Smart Battery Optimizer", version="2.0",
               description="Hour-by-hour home battery scheduling for Pakistani solar homes.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                    allow_methods=["*"], allow_headers=["*"])
 
 
 @lru_cache(maxsize=None)
-def solar_5kw(location):
-    """Hourly output of a 5 kW system at this location (PVWatts typical year), kWh."""
-    return pd.read_csv(ROOT / "data/raw" / LOCATIONS[location]["file"])["solar_wh"].to_numpy(float) / 1000
+def city_profile(location):
+    p = PROFILES[PROFILES.city == LOCATIONS[location]["name"]]
+    return p.solar_kwh_per_kw.to_numpy(float), p.demand_shape.to_numpy(float)
 
 
 class Tariff(BaseModel):
@@ -59,12 +54,12 @@ class Tariff(BaseModel):
 
 
 class OptimizeRequest(BaseModel):
-    location: str = "faisalabad"
+    location: str = "lahore"
     panel_kw: float = Field(5.0, gt=0, le=50)
     battery_kwh: float = Field(10.0, gt=0, le=100)
-    max_power_kw: float = Field(3.0, gt=0, le=50)
-    week: int = Field(20, ge=0, le=51)
-    demand_scale: float = Field(1.0, gt=0, le=10)
+    max_power_kw: float = Field(5.0, gt=0, le=50)
+    week: int = Field(10, ge=0, le=N_WEEKS - 1)
+    daily_kwh: float = Field(20.0, gt=0, le=300)
     tariff: Tariff = Field(default_factory=Tariff)
     outage_hours: list[int] = Field(default_factory=list)
     deg_cost: float = Field(0.0, ge=0, le=100)
@@ -77,19 +72,7 @@ class OptimizeRequest(BaseModel):
         return sorted(set(v))
 
 
-def learned_status(req):
-    if not agent.available():
-        return False, "Model file or PyTorch not available on this server."
-    default = (req.location == "faisalabad" and req.panel_kw == 5 and req.battery_kwh == 10
-               and req.max_power_kw == 3 and req.demand_scale == 1 and not req.outage_hours
-               and req.tariff.model_dump() == DEFAULT_TARIFF)
-    if not default:
-        return False, ("The learned controller was trained for one system only (Faisalabad, 5 kW panels, "
-                       "10 kWh / 3 kW battery, default tariff, no outages). Reset those settings to see it.")
-    return True, ""
-
-
-def summarize(frame, solar_w, demand_w, cap):
+def summarize(frame, demand_w, cap):
     grid, wear = float(frame.cost.sum()), float(frame.degradation.sum())
     demand_total = float(demand_w.sum())
     return {
@@ -115,19 +98,18 @@ def action_label(flow, solar, demand, outage):
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "learned_model": agent.available()}
+    return {"status": "ok"}
 
 
 @app.get("/api/config")
 def config():
-    starts = np.arange(0, 52) * W
+    starts = np.arange(N_WEEKS) * W
     return {
         "locations": list(LOCATIONS.values()),
         "default_tariff": DEFAULT_TARIFF,
         "strategies": STRATEGIES,
         "weeks": [{"index": int(i), "start": TIMES[s].strftime("%Y-%m-%d"),
-                   "label": f"{TIMES[s]:%d %b} – {TIMES[min(s + W - 1, len(TIMES) - 1)]:%d %b}"}
-                  for i, s in enumerate(starts)],
+                   "label": f"{TIMES[s]:%d %b} – {TIMES[s + W - 1]:%d %b}"} for i, s in enumerate(starts)],
         "defaults": OptimizeRequest().model_dump(),
         "outage_presets": {"none": [], "light": [19, 20], "heavy": [8, 9, 14, 15, 19, 20]},
     }
@@ -139,27 +121,21 @@ def _optimize(key):
     if req.location not in LOCATIONS:
         raise HTTPException(404, f"Unknown location '{req.location}'")
     t0 = time.perf_counter()
-    solar = solar_5kw(req.location) * req.panel_kw / 5.0
-    demand = DEMAND * req.demand_scale
-    typical = TYPICAL * req.demand_scale
+    solar_kw, shape = city_profile(req.location)
+    solar = solar_kw * req.panel_kw
+    demand = shape * req.daily_kwh / 24
     buy, sell = tou_prices(HOURS, req.tariff.peak, req.tariff.offpeak, req.tariff.export, req.tariff.peak_hours)
     outage = outage_mask(HOURS, req.outage_hours)
-    start = req.week * W
-    length = min(W, len(solar) - start)
+    start, length = req.week * W, W
     sl = slice(start, start + length)
-    kw = dict(cap=req.battery_kwh, pmax=req.max_power_kw, buy=buy, sell=sell, outage=outage,
-              deg_cost=req.deg_cost)
+    kw = dict(cap=req.battery_kwh, pmax=req.max_power_kw, buy=buy, sell=sell, outage=outage, deg_cost=req.deg_cost)
 
-    learned_ok, learned_reason = learned_status(req)
-    policies = {"none": "none", "selfuse": "selfuse", "peakaware": "peakaware", "mpc": "mpc"}
-    if learned_ok:
-        policies["learned"] = agent.LearnedController(solar, demand, HOURS, demand_forecast=typical)
-    frames = {k: simulate(solar, demand, HOURS, p, start, length,
-                          demand_forecast=typical if k == "mpc" else None, **kw)
-              for k, p in policies.items()}
+    # The optimizer only sees the past: it forecasts with the last 24-48 h and plans with a risk margin.
+    frames = {k: simulate(solar, demand, HOURS, k, start, length, **kw) for k in ("none", "selfuse", "peakaware")}
+    frames["mpc"] = simulate(solar, demand, HOURS, "mpc", start, length, forecaster=persistence_forecaster(solar, demand),
+                             plan_margin=RISK_MARGIN, **kw)
 
-    summary = {k: {"id": k, "name": STRATEGIES[k], **summarize(f, solar[sl], demand[sl], req.battery_kwh)}
-               for k, f in frames.items()}
+    summary = {k: {"id": k, "name": STRATEGIES[k], **summarize(f, demand[sl], req.battery_kwh)} for k, f in frames.items()}
     none_cost = summary["none"]["total_cost"]
     for s in summary.values():
         s["saving_vs_none_pct"] = round(100 * (none_cost - s["total_cost"]) / none_cost, 1) if none_cost > 0 else None
@@ -183,9 +159,8 @@ def _optimize(key):
     r3 = lambda a: np.round(np.asarray(a, float), 3).tolist()
     return {
         "meta": {"location": LOCATIONS[req.location]["name"],
-                 "period": f"{TIMES[start]:%d %b} – {TIMES[start + length - 1]:%d %b}",
-                 "hours": length, "learned_available": learned_ok, "learned_reason": learned_reason,
-                 "recommended": "mpc", "runtime_ms": round(1000 * (time.perf_counter() - t0))},
+                 "period": f"{TIMES[start]:%d %b %Y} – {TIMES[start + length - 1]:%d %b %Y}",
+                 "hours": length, "recommended": "mpc", "runtime_ms": round(1000 * (time.perf_counter() - t0))},
         "request": req.model_dump(),
         "summary": summary,
         "hourly": {

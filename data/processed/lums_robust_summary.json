@@ -1,0 +1,43 @@
+{
+ "tuning_homes": 30,
+ "test_homes": 29,
+ "chosen_margin": {
+  "lgbm": 0.0,
+  "persistence": 6.0
+ },
+ "results": {
+  "persistence, margin 0": {
+   "forecast": "persistence",
+   "margin": 0.0,
+   "median_pct_of_bill": -0.85,
+   "ci95": [
+    -1.37,
+    -0.39
+   ],
+   "pkr_per_year_median": -773,
+   "homes_beating_rule": 6
+  },
+  "persistence, margin 6": {
+   "forecast": "persistence",
+   "margin": 6.0,
+   "median_pct_of_bill": -0.76,
+   "ci95": [
+    -1.17,
+    -0.36
+   ],
+   "pkr_per_year_median": -439,
+   "homes_beating_rule": 6
+  },
+  "lgbm, margin 0": {
+   "forecast": "lgbm",
+   "margin": 0.0,
+   "median_pct_of_bill": -0.63,
+   "ci95": [
+    -1.2,
+    -0.12
+   ],
+   "pkr_per_year_median": -768,
+   "homes_beating_rule": 7
+  }
+ }
+}

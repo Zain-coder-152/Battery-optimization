@@ -6,6 +6,8 @@ export interface Location {
   lat: number
   lon: number
   annual_kwh_per_5kw: number
+  homes: number
+  typical_kwh_per_day: number
 }
 
 export interface Tariff {
@@ -21,7 +23,7 @@ export interface OptimizeRequest {
   battery_kwh: number
   max_power_kw: number
   week: number
-  demand_scale: number
+  daily_kwh: number
   tariff: Tariff
   outage_hours: number[]
   deg_cost: number
@@ -74,8 +76,6 @@ export interface OptimizeResponse {
     location: string
     period: string
     hours: number
-    learned_available: boolean
-    learned_reason: string
     recommended: StrategyId
     runtime_ms: number
   }

@@ -71,13 +71,16 @@ def solve_lp(solar_f, demand_f, buy_f, sell_f, soc, cap, pmax, eff, min_soc,
 
 def simulate(solar, demand, hours, policy, start, length=168, cap=10.0, pmax=3.0, eff=0.95,
              min_frac=0.1, soc0_frac=0.5, horizon=48, demand_forecast=None,
-             buy=None, sell=None, outage=None, deg_cost=0.0, terminal_factor=1.0, forecaster=None):
+             buy=None, sell=None, outage=None, deg_cost=0.0, terminal_factor=1.0, forecaster=None,
+             plan_margin=0.0):
     """Simulate hours [start, start+length).
     policy: 'none' | 'selfuse' | 'peakaware' | 'mpc' | callable(t, soc) -> net charge kWh.
     solar/demand/hours are full-year arrays (MPC looks ahead past the end of the week).
     demand_forecast: optional array used for FUTURE demand in MPC (current hour is always real).
     forecaster: optional callable(t, end) -> (solar_f, demand_f) giving MPC its forecast for hours
     [t, end) as issued at hour t; overrides demand_forecast. The current hour is always measured.
+    plan_margin: extra PKR per kWh moved through the battery that MPC adds when planning, never billed.
+    It stops the optimizer from trading on thin margins that forecast errors would wipe out.
     buy/sell: price arrays (default: Pakistan TOU). outage: bool array, grid down when True.
     deg_cost: battery wear cost in PKR per kWh charged or discharged."""
     n = len(solar)
@@ -106,7 +109,7 @@ def simulate(solar, demand, hours, policy, start, length=168, cap=10.0, pmax=3.0
                 d_f = np.array((demand if demand_forecast is None else demand_forecast)[t:e], dtype=float)
             s_f[0], d_f[0] = solar[t], demand[t]
             nc = mpc_first_action(s_f, d_f, buy[t:e], sell[t:e], soc, cap, pmax, eff, min_soc,
-                                  outage[t:e], deg_cost, terminal_factor)
+                                  outage[t:e], deg_cost + plan_margin, terminal_factor)
         elif callable(policy):
             nc = float(policy(t, soc))
         else:
@@ -134,3 +137,13 @@ def simulate(solar, demand, hours, policy, start, length=168, cap=10.0, pmax=3.0
                      "cost": imp * buy[t] - exp * sell[t],
                      "degradation": deg_cost * (charge_in + discharge_out)})
     return pd.DataFrame(rows)
+
+
+def persistence_forecaster(solar, demand):
+    """Forecast for hour t+k issued at t: the value 24 h (or 48 h) earlier, so only past data is used.
+    Before the first day of data, the earliest available hour is used."""
+    def lagged(x, t, e):
+        k = np.arange(e - t)
+        lag = 24 * np.ceil(np.maximum(k, 1) / 24).astype(int)
+        return x[np.maximum(t + k - lag, 0)]
+    return lambda t, e: (lagged(solar, t, e), lagged(demand, t, e))
