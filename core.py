@@ -86,6 +86,8 @@ def simulate(solar, demand, hours, policy, start, length=168, cap=10.0, pmax=3.0
     n = len(solar)
     if buy is None or sell is None:
         buy, sell = tou_prices(hours)
+    if policy == "mpc" and np.any(np.asarray(sell) > np.asarray(buy)):
+        raise ValueError("MPC needs sell <= buy in every hour: otherwise its linear program is unbounded")
     outage = np.zeros(n, bool) if outage is None else np.asarray(outage, bool)
     peak_mask = buy >= buy.max() - 1e-9 if buy.max() > buy.min() + 1e-9 else np.zeros(n, bool)
     min_soc = min_frac * cap

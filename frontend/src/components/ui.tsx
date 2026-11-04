@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Info } from 'lucide-react'
 
 export function cx(...c: (string | false | null | undefined)[]) {
@@ -83,6 +83,34 @@ export function Select({ id, value, onChange, children }: {
   )
 }
 
+/** Number box that lets you type freely: in-range values apply as you type, anything else is corrected on leaving the box. */
+function NumberInput({ id, className, value, min, max, step, onChange }: {
+  id: string
+  className: string
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (v: number) => void
+}) {
+  const [draft, setDraft] = useState<string | null>(null)
+  return (
+    <input id={id} type="number" className={className} min={min} max={max} step={step}
+      value={draft ?? value}
+      onChange={(e) => {
+        setDraft(e.target.value)
+        const v = Number(e.target.value)
+        if (e.target.value !== '' && v >= min && v <= max) onChange(v)
+      }}
+      onBlur={() => {
+        if (draft !== null && draft !== '' && !Number.isNaN(Number(draft))) {
+          onChange(Math.min(max, Math.max(min, Number(draft))))
+        }
+        setDraft(null)
+      }} />
+  )
+}
+
 /** Slider with a linked number box. */
 export function SliderField({ id, label, unit, value, min, max, step, onChange }: {
   id: string
@@ -100,12 +128,8 @@ export function SliderField({ id, label, unit, value, min, max, step, onChange }
         <input type="range" className="h-1.5 min-w-0 flex-1 cursor-pointer" min={min} max={max} step={step}
           value={value} aria-label={label} onChange={(e) => onChange(Number(e.target.value))} />
         <div className="flex w-[104px] shrink-0 items-center rounded-lg border border-line bg-surface focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25">
-          <input id={id} type="number" className="tnum w-full min-w-0 bg-transparent py-1.5 pl-2.5 text-right text-[14px] text-ink outline-none"
-            min={min} max={max} step={step} value={value}
-            onChange={(e) => {
-              const v = Number(e.target.value)
-              if (!Number.isNaN(v)) onChange(Math.min(max, Math.max(min, v)))
-            }} />
+          <NumberInput id={id} className="tnum w-full min-w-0 bg-transparent py-1.5 pl-2.5 text-right text-[14px] text-ink outline-none"
+            min={min} max={max} step={step} value={value} onChange={onChange} />
           <span className="px-2 text-[12px] text-muted">{unit}</span>
         </div>
       </div>
@@ -126,12 +150,8 @@ export function NumberField({ id, label, unit, value, min, max, step, onChange }
   return (
     <Field label={label} htmlFor={id}>
       <div className="flex items-center rounded-lg border border-line bg-surface focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25">
-        <input id={id} type="number" className="tnum w-full min-w-0 bg-transparent px-2.5 py-2 text-[14px] text-ink outline-none"
-          min={min} max={max} step={step} value={value}
-          onChange={(e) => {
-            const v = Number(e.target.value)
-            if (!Number.isNaN(v)) onChange(Math.min(max, Math.max(min, v)))
-          }} />
+        <NumberInput id={id} className="tnum w-full min-w-0 bg-transparent px-2.5 py-2 text-[14px] text-ink outline-none"
+          min={min} max={max} step={step} value={value} onChange={onChange} />
         {unit && <span className="whitespace-nowrap pr-2.5 text-[12px] text-muted">{unit}</span>}
       </div>
     </Field>

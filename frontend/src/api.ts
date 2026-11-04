@@ -99,7 +99,10 @@ async function request<T>(path: string, init?: RequestInit, signal?: AbortSignal
     let detail = `${res.status} ${res.statusText}`
     try {
       const body = await res.json()
-      if (body?.detail) detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
+      if (typeof body?.detail === 'string') detail = body.detail
+      else if (Array.isArray(body?.detail)) {
+        detail = body.detail.map((d: { msg: string }) => d.msg.replace(/^Value error, /, '')).join(' ')
+      }
     } catch { /* keep the status text */ }
     throw new Error(detail)
   }

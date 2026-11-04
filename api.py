@@ -7,9 +7,10 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from core import simulate, tou_prices, outage_mask, persistence_forecaster, PEAK_HOURS
 
@@ -33,6 +34,13 @@ app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http
                    allow_methods=["*"], allow_headers=["*"])
 
 
+@app.exception_handler(RequestValidationError)
+def invalid_request(_, exc):
+    # Only loc/msg/type: the default response echoes the input, and Infinity/NaN cannot be sent as JSON.
+    return JSONResponse(status_code=422, content={"detail": [
+        {"loc": list(e["loc"]), "msg": e["msg"], "type": e["type"]} for e in exc.errors()]})
+
+
 @lru_cache(maxsize=None)
 def city_profile(location):
     p = PROFILES[PROFILES.city == LOCATIONS[location]["name"]]
@@ -51,6 +59,16 @@ class Tariff(BaseModel):
         if any(h < 0 or h > 23 for h in v):
             raise ValueError("hours must be 0-23")
         return sorted(set(v))
+
+    @model_validator(mode="after")
+    def export_not_above_grid_price(self):
+        # Selling above the buying price makes the optimizer's linear program unbounded (buy and sell at
+        # once for endless profit), so it cannot give a correct schedule. Refuse instead of showing a wrong one.
+        prices = ([self.peak] if self.peak_hours else []) + ([self.offpeak] if len(self.peak_hours) < 24 else [])
+        if self.export > min(prices):
+            raise ValueError(f"Export price ({self.export:g}) cannot be higher than the lowest grid price "
+                             f"({min(prices):g} PKR/kWh).")
+        return self
 
 
 class OptimizeRequest(BaseModel):

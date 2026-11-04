@@ -8,19 +8,20 @@ export function StrategyComparison({ data }: { data: OptimizeResponse }) {
   const rows = STRATEGY_ORDER.map((s) => data.summary[s]).filter(Boolean) as StrategySummary[]
   rows.sort((a, b) => a.total_cost - b.total_cost)
   const max = Math.max(...rows.map((r) => Math.max(r.total_cost, 0)), 1)
-  const cheapest = rows[0]?.id
+  // no badge on a tie: nothing is really cheaper
+  const cheapest = rows.length > 1 && rows[1].total_cost - rows[0].total_cost >= 0.5 ? rows[0].id : null
   const outages = data.request.outage_hours.length > 0
   const wear = data.request.deg_cost > 0
 
   return (
-    <Card title="Weekly cost comparison" subtitle={`Grid bill${wear ? ' + battery wear' : ''}, PKR for the selected week. Lower is better.`}>
+    <Card title="Weekly cost comparison" subtitle={`Grid bill${wear ? ' + battery wear' : ''}, PKR for the selected week. Lower is better.${outages ? ' Power the home goes without is not billed, so compare unmet demand too.' : ''}`}>
       <ul className="space-y-3.5">
         {rows.map((r) => (
           <li key={r.id}>
             <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
               <span className="flex items-center gap-2 text-[13px] font-medium text-ink">
                 <Swatch color={STRATEGY_COLOR[r.id]} />{STRATEGY_LABEL[r.id]}
-                {r.id === cheapest && <Badge tone="good">Cheapest this week</Badge>}
+                {r.id === cheapest && <Badge tone="good">{outages ? 'Lowest bill' : 'Cheapest this week'}</Badge>}
               </span>
               <span className="tnum text-[13px] text-ink">
                 <span className="font-semibold">{pkr(r.total_cost)}</span>

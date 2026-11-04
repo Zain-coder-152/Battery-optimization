@@ -117,7 +117,7 @@ export default function Planner({ config }: { config: Config }) {
         {error && (
           <div role="alert" className="flex items-start gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-[13px] text-bad">
             <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
-            <div><span className="font-semibold">Could not run the scenario.</span> {error}</div>
+            <div><span className="font-semibold">Could not run the scenario.</span> {error}{data && ' The results below are from the last valid settings.'}</div>
           </div>
         )}
         {!data ? <Skeleton /> : (
