@@ -3,7 +3,6 @@ import {
   Area, Bar, CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from 'recharts'
-import { LineChart as LineIcon } from 'lucide-react'
 import type { OptimizeResponse, StrategyId } from '../api'
 import { Card, Legend, Segmented, Swatch } from './ui'
 import { STRATEGY_COLOR, STRATEGY_LABEL, num, ranges } from '../lib/format'
@@ -120,7 +119,7 @@ export default function HourlyCharts({ data, focus, onFocus }: {
         <div className="space-y-6">
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><LineIcon className="size-3.5 text-muted" aria-hidden />Solar output and household demand (kWh)</h3>
+              <h3 className="text-[13px] font-semibold text-ink">Solar output and household demand (kWh)</h3>
               <Legend items={[{ label: 'Solar', color: 'var(--s-solar)', line: true }, { label: 'Demand', color: 'var(--s-demand)', line: true }, ...bandLegend]} />
             </div>
             <Frame height={200}>

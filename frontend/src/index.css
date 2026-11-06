@@ -4,61 +4,62 @@
 
 :root {
   color-scheme: light;
-  --page: #f6f6f3;
-  --surface: #fcfcfb;
-  --surface-2: #f1f0ec;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --muted: #7a7973;
-  --grid: #e7e6e0;
-  --axis: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.09);
-  --accent: #2a78d6;
-  --accent-soft: #e6f0fc;
-  --good: #006300;
-  --bad: #b42d2d;
-  --warn-bg: #fdf3dc;
-  --warn-ink: #7a5300;
+  --page: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --ink: #0f172a;
+  --ink-2: #475569;
+  --muted: #64748b;
+  --grid: #e8edf3;
+  --axis: #cbd5e1;
+  --border: rgba(15, 23, 42, 0.09);
+  --accent: #1e40af;
+  --accent-soft: #eef2fb;
+  --good: #15803d;
+  --bad: #b91c1c;
+  --warn-bg: #fdf4e3;
+  --warn-ink: #8a5a00;
 
-  /* chart series (validated palette, see README) */
-  --s-mpc: #2a78d6;
-  --s-selfuse: #eb6834;
-  --s-learned: #1baf7a;
-  --s-peakaware: #eda100;
-  --s-none: #a3a29b;
-  --s-solar: #eda100;
-  --s-demand: #6250d6;
-  --band-peak: rgba(235, 104, 52, 0.08);
-  --band-outage: rgba(11, 11, 11, 0.07);
+  /* chart series: the smart schedule is the only coloured series, alternatives are slate */
+  --s-mpc: #1e40af;
+  --s-selfuse: #8592a7;
+  --s-learned: #64748b;
+  --s-peakaware: #64748b;
+  --s-none: #cbd5e1;
+  --s-solar: #b7791f;
+  --s-demand: #475569;
+  --band-peak: rgba(30, 64, 175, 0.06);
+  --band-outage: rgba(15, 23, 42, 0.07);
 }
 
 .dark {
   color-scheme: dark;
-  --page: #0f0f0e;
-  --surface: #1a1a19;
-  --surface-2: #232321;
-  --ink: #f0efec;
-  --ink-2: #c3c2b7;
-  --muted: #8f8e88;
-  --grid: #2c2c2a;
-  --axis: #45453f;
-  --border: rgba(255, 255, 255, 0.09);
-  --accent: #3987e5;
-  --accent-soft: #17283d;
-  --good: #3cc23c;
-  --bad: #e66767;
-  --warn-bg: #33270b;
-  --warn-ink: #f0c25a;
+  --page: #050505;
+  --surface: #111111;
+  --surface-2: #1a1a1a;
+  --ink: #f2f2f2;
+  --ink-2: #a1a1a1;
+  --muted: #8f8f8f;
+  --grid: #1f1f1f;
+  --axis: #333333;
+  --border: rgba(255, 255, 255, 0.1);
+  --accent: #f2f2f2;
+  --accent-soft: #1f1f1f;
+  --good: #4ade80;
+  --bad: #f87171;
+  --warn-bg: #2a2111;
+  --warn-ink: #f2c46d;
 
-  --s-mpc: #3987e5;
-  --s-selfuse: #d95926;
-  --s-learned: #199e70;
-  --s-peakaware: #c98500;
-  --s-none: #6d6c66;
-  --s-solar: #c98500;
-  --s-demand: #9085e9;
-  --band-peak: rgba(217, 89, 38, 0.12);
-  --band-outage: rgba(255, 255, 255, 0.07);
+  /* black theme: the smart schedule is white, alternatives grey, solar the only colour */
+  --s-mpc: #f2f2f2;
+  --s-selfuse: #6b6b6b;
+  --s-learned: #8f8f8f;
+  --s-peakaware: #8f8f8f;
+  --s-none: #2a2a2a;
+  --s-solar: #e5a530;
+  --s-demand: #7c7c7c;
+  --band-peak: rgba(255, 255, 255, 0.05);
+  --band-outage: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
@@ -75,7 +76,7 @@
   --color-bad: var(--bad);
   --color-warn-bg: var(--warn-bg);
   --color-warn-ink: var(--warn-ink);
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 html, body {

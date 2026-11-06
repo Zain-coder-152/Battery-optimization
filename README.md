@@ -114,10 +114,15 @@ Open http://localhost:5173 (the dev server proxies `/api` to the backend). For a
 
 ## The dashboard
 
-The app is a single planner page: pick a city, week (Nov 2023 - Oct 2024), panel and battery size, daily consumption, tariff (NEPRA preset or custom rates and
-  peak hours), a load-shedding schedule and a battery wear cost. It shows the weekly saving, a cost comparison of all
-  strategies, the optimizer's 24-hour schedule, and hour-by-hour solar, demand, battery level and battery power
-  (charts or table), plus a per-day cost table.
+The app has four pages:
+
+- **Settings** - your home (city, daily use, panels, battery, inverter) and your electricity (tariff, peak hours,
+  load-shedding; battery wear under Advanced). First-time visitors start here; settings are remembered in the browser.
+- **Overview** - this week's saving and a comparison of no battery, basic battery use and the smart schedule.
+- **Today's plan** - the battery's hour-by-hour actions for the first day of the week.
+- **Details** - solar, usage, battery level and battery power charts (or a table), plus the cost of each day.
+
+A bar above the results pages shows the current setup and switches between the 52 weeks of Nov 2023 - Oct 2024.
 
 Demand is each city's typical-home profile (the hourly average over the city's LUMS homes, each normalised to its own
 yearly mean, so no individual home's readings ship with the app), scaled to the daily consumption you enter. The

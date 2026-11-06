@@ -187,7 +187,7 @@ export function HourGrid({ value, onChange, label, tone }: {
 }) {
   const on = new Set(value)
   const activeCls = tone === 'peak'
-    ? 'bg-[var(--s-selfuse)] text-white border-transparent'
+    ? 'bg-accent text-surface border-transparent'
     : 'bg-ink text-surface border-transparent'
   return (
     <div role="group" aria-label={label}>

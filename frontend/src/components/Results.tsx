@@ -1,5 +1,4 @@
-import { ArrowDownToLine, ArrowUpFromLine, BatteryCharging, Pause, PlugZap, Sun, TriangleAlert } from 'lucide-react'
-import type { OptimizeResponse, ScheduleRow, StrategyId, StrategySummary } from '../api'
+import type { OptimizeResponse, StrategyId, StrategySummary } from '../api'
 import { Badge, Card, Swatch, cx } from './ui'
 import { STRATEGY_COLOR, STRATEGY_LABEL, STRATEGY_ORDER, hourLabel, num, pct, pkr } from '../lib/format'
 
@@ -53,12 +52,6 @@ export function StrategyComparison({ data }: { data: OptimizeResponse }) {
   )
 }
 
-const ACTION: Record<ScheduleRow['action'], { icon: typeof Sun; tone: string }> = {
-  'Charge from solar': { icon: Sun, tone: 'text-[var(--s-peakaware)]' },
-  'Charge from grid': { icon: PlugZap, tone: 'text-accent' },
-  'Discharge to home': { icon: BatteryCharging, tone: 'text-[var(--s-selfuse)]' },
-  Hold: { icon: Pause, tone: 'text-muted' },
-}
 
 export function ScheduleTable({ data }: { data: OptimizeResponse }) {
   const rows = data.schedule
@@ -66,7 +59,7 @@ export function ScheduleTable({ data }: { data: OptimizeResponse }) {
   return (
     <Card title="Recommended schedule"
       subtitle={`Battery actions for the first 24 hours${first ? ` (${first.toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'short' })})` : ''}.`}>
-      <div className="max-h-[440px] overflow-auto rounded-lg border border-line">
+      <div className="overflow-x-auto rounded-lg border border-line">
         <table className="w-full text-[13px]">
           <thead className="sticky top-0 z-10 bg-surface-2 text-left text-[12px] text-muted">
             <tr>
@@ -80,25 +73,16 @@ export function ScheduleTable({ data }: { data: OptimizeResponse }) {
           </thead>
           <tbody className="tnum">
             {rows.map((r) => {
-              const A = ACTION[r.action]
               return (
                 <tr key={r.time} className="border-t border-line">
                   <td className="whitespace-nowrap px-3 py-2 text-ink-2">{hourLabel(r.hour)}</td>
                   <td className="whitespace-nowrap px-3 py-2">
-                    <span className="flex items-center gap-1.5 text-ink">
-                      <A.icon className={cx('size-3.5', A.tone)} aria-hidden />{r.action}
-                    </span>
+                    <span className={cx(r.action === 'Hold' ? 'text-muted' : 'text-ink')}>{r.action}</span>
                   </td>
                   <td className="px-3 py-2 text-right text-ink">{r.battery_kwh > 0 ? '+' : ''}{num(r.battery_kwh, 2)}</td>
                   <td className="px-3 py-2 text-right text-ink-2">{num(r.soc_kwh, 1)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-right text-ink-2">
-                    {r.outage ? <Badge tone="warn"><TriangleAlert className="size-3" aria-hidden />Off</Badge> : (
-                      <span className="inline-flex items-center gap-1">
-                        {r.grid_kwh > 0.005 ? <ArrowDownToLine className="size-3 text-muted" aria-label="import" />
-                          : r.grid_kwh < -0.005 ? <ArrowUpFromLine className="size-3 text-muted" aria-label="export" /> : null}
-                        {num(Math.abs(r.grid_kwh), 2)}
-                      </span>
-                    )}
+                    {r.outage ? <Badge tone="warn">Grid off</Badge> : r.grid_kwh > 0.005 ? `${num(r.grid_kwh, 2)} in` : r.grid_kwh < -0.005 ? `${num(-r.grid_kwh, 2)} out` : '0.00'}
                   </td>
                   <td className="px-3 py-2 text-right text-ink-2">{r.outage ? '—' : num(r.price, 2)}</td>
                 </tr>
@@ -107,7 +91,7 @@ export function ScheduleTable({ data }: { data: OptimizeResponse }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[12px] text-muted">Battery and grid in kWh for that hour; level in kWh after the hour. Price in PKR/kWh.</p>
+      <p className="mt-2 text-[12px] text-muted">Battery and grid in kWh for that hour (grid: in = bought, out = sold); level in kWh after the hour. Price in PKR/kWh.</p>
     </Card>
   )
 }
