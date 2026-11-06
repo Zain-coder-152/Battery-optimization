@@ -92,6 +92,12 @@ docker run -p 8000:8000 smart-battery-optimizer
 
 Open http://localhost:8000.
 
+### Vercel
+
+Import the GitHub repository at https://vercel.com/new and deploy with the defaults. `vercel.json` builds the React
+app, and `index.py` runs the FastAPI app (API and dashboard) as one Python function; heavy and research-only files
+are excluded from the function bundle. The first request after a quiet period takes a few seconds to start.
+
 ### Local development
 
 ```bash
